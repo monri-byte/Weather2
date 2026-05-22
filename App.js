@@ -158,7 +158,7 @@ export default function App() {
           <MaterialCommunityIcons 
             name={showWind ? 'weather-windy' : 'weather-windy-variant'} 
             size={20} 
-            color={showWind ? '#fff' : '#666'} 
+            color={showWind ? 'white' : 'gray'} 
           />
           <Text style={[styles.layerToggleText, showWind && styles.layerToggleTextActive]}>
             Ветер
@@ -171,7 +171,7 @@ export default function App() {
           <MaterialCommunityIcons 
             name={showClouds ? 'cloud' : 'cloud-outline'} 
             size={20} 
-            color={showClouds ? '#fff' : '#666'} 
+            color={showClouds ? 'white' : 'gray'} 
           /><Text style={[styles.layerToggleText, showClouds && styles.layerToggleTextActive]}>
             Облака
           </Text>
@@ -214,7 +214,7 @@ export default function App() {
             <Marker key={`wind-${city.id}`} coordinate={{ latitude: city.lat + 0.025, longitude: city.lon }}>
               <View style={styles.windMarkerContainer}>
                 <View style={[styles.windArrow, { transform: [{ rotate: `${data.windDeg || 0}deg` }] }]}>
-                  <MaterialCommunityIcons name="arrow-up" size={14} color="#795548" />
+                  <MaterialCommunityIcons name="arrow-up" size={14} color="red" />
                 </View>
                 <Text style={styles.windText}>{data.windSpeed} км/ч</Text>
               </View>
