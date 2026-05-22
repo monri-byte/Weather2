@@ -78,7 +78,6 @@ const INITIAL_REGION = {
   longitudeDelta: 0.5,
 };
 
-// ✅ Функция расчёта региона для всех маркеров
 const getAllMarkersRegion = () => {
   const lats = CITIES.map((c) => c.lat);
   const lons = CITIES.map((c) => c.lon);
@@ -90,7 +89,7 @@ const getAllMarkersRegion = () => {
   return {
     latitude: (minLat + maxLat) / 2,
     longitude: (minLon + maxLon) / 2,
-    latitudeDelta: (maxLat - minLat) * 1.5, // +50% отступ
+    latitudeDelta: (maxLat - minLat) * 1.5,
     longitudeDelta: (maxLon - minLon) * 1.5,
   };
 };
