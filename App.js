@@ -53,6 +53,7 @@ export default function App() {
   const [error, setError] = useState(null);
   const [showTemperature, setShowTemperature] = useState(true);
   const [showPrecipitation, setShowPrecipitation] = useState(false);
+  const [showWind, setShowWind] = useState(false);
 
   useEffect(() => {
     const fetchWeather = async () => {
@@ -76,6 +77,8 @@ export default function App() {
             description: data.weather[0].description,
             rain: data.rain?.['1h'] || 0,
             snow: data.snow?.['1h'] || 0,
+            windSpeed: Math.round(data.wind.speed * 3.6),
+            windDeg: data.wind.deg,
           };
         }
         
@@ -128,6 +131,13 @@ export default function App() {
         >
           <MaterialCommunityIcons name={showPrecipitation ? 'umbrella' : 'umbrella-outline'} size={20} color={showPrecipitation ? '#fff' : '#666'} />
           <Text style={[styles.layerToggleText, showPrecipitation && styles.layerToggleTextActive]}>Осадки</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.layerToggle, showWind && styles.layerToggleActive]}
+          onPress={() => setShowWind(!showWind)}
+        >
+          <MaterialCommunityIcons name={showWind ? 'weather-windy' : 'weather-windy-variant'} size={20} color={showWind ? '#fff' : '#666'} />
+          <Text style={[styles.layerToggleText, showWind && styles.layerToggleTextActive]}>Ветер</Text>
         </TouchableOpacity>
       </View>
 
@@ -189,6 +199,28 @@ export default function App() {
                 </View>
               </Marker>
             </React.Fragment>
+          );
+        })}
+
+        {showWind && CITIES.map(city => {
+          const data = weatherData[city.id];
+          if (!data) return null;
+          
+          const windSpeed = data.windSpeed;
+          const windDeg = data.windDeg || 0;
+          
+          return (
+            <Marker
+              key={`wind-${city.id}`}
+              coordinate={{ latitude: city.lat + 0.025, longitude: city.lon }}
+            >
+              <View style={styles.windMarkerContainer}>
+                <View style={[styles.windArrow, { transform: [{ rotate: `${windDeg}deg` }] }]}>
+                  <MaterialCommunityIcons name="arrow-up" size={14} color="#795548" />
+                </View>
+                <Text style={styles.windText}>{windSpeed} км/ч</Text>
+              </View>
+            </Marker>
           );
         })}
 
@@ -271,6 +303,25 @@ const styles = StyleSheet.create({
     fontSize: 9,
     color: 'black',
     marginTop: 2,
+    fontWeight: '700',
+  },
+  windMarkerContainer: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderRadius: 10,
+    padding: 4,
+    shadowColor: 'black',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 3,
+  },
+  windArrow: {
+    marginBottom: 2,
+  },
+  windText: {
+    fontSize: 9,
+    color: 'black',
     fontWeight: '700',
   },
 });
