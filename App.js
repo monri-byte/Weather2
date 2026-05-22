@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   StyleSheet,
   View,
@@ -51,7 +51,7 @@ const getTempColor = (temp) => {
   if (temp < 10) return '#4FC3F7';
   if (temp < 20) return '#8BC34A';
   if (temp < 30) return '#FF9800';
-  return '#F44336';
+  return 'red';
 };
 
 const getPrecipRadius = (mm) => {
@@ -66,12 +66,20 @@ const getPressureColor = (pressure) => {
   if (pressure < 1000) return '#1976D2';
   if (pressure < 1020) return '#388E3C';
   if (pressure < 1040) return '#F57C00';
-  return '#D32F2F';
+  return 'red';
 };
 
 const API_KEY = 'c04aaf45ed5b032e280a635805e2ad4e';
 
+const INITIAL_REGION = {
+  latitude: 55.7558,
+  longitude: 37.6173,
+  latitudeDelta: 0.5,
+  longitudeDelta: 0.5,
+};
+
 export default function App() {
+  const mapRef = useRef(null);
   const [weatherData, setWeatherData] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -80,6 +88,10 @@ export default function App() {
   const [showWind, setShowWind] = useState(false);
   const [showClouds, setShowClouds] = useState(false);
   const [showPressure, setShowPressure] = useState(false);
+
+  const goToCenter = () => {
+    mapRef.current?.animateToRegion(INITIAL_REGION, 500);
+  };
 
   useEffect(() => {
     const fetchWeather = async () => {
@@ -151,6 +163,11 @@ export default function App() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <TouchableOpacity style={styles.centerButton} onPress={goToCenter}>
+        <MaterialCommunityIcons name="target" size={20} color="black" />
+        <Text style={styles.centerButtonText}>В центр</Text>
+      </TouchableOpacity>
+
       <View style={styles.togglesContainer}>
         <TouchableOpacity
           style={[
@@ -245,13 +262,9 @@ export default function App() {
       </View>
 
       <MapView
+        ref={mapRef}
         style={styles.map}
-        initialRegion={{
-          latitude: 55.7558,
-          longitude: 37.0,
-          latitudeDelta: 5,
-          longitudeDelta: 5,
-        }}>
+        initialRegion={INITIAL_REGION}>
         {showTemperature &&
           CITIES.map((city) => {
             const data = weatherData[city.id];
@@ -442,7 +455,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: 'white',
   },
   loadingText: {
     marginTop: 12,
@@ -459,6 +472,29 @@ const styles = StyleSheet.create({
     marginTop: 8,
     fontSize: 13,
     color: 'gray',
+  },
+  centerButton: {
+    position: 'absolute',
+    top: 10,
+    left: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'white',
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 20,
+    elevation: 5,
+    shadowColor: 'black',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    zIndex: 1000,
+  },
+  centerButtonText: {
+    marginLeft: 6,
+    fontSize: 14,
+    color: 'black',
+    fontWeight: '600',
   },
   togglesContainer: {
     position: 'absolute',
