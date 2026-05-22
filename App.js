@@ -565,8 +565,8 @@ const styles = StyleSheet.create({
   weatherBox: {
     alignItems: 'center',
     backgroundColor: 'white',
-    borderRadius: 16,
-    padding: 8,
+    borderRadius: 10,
+    padding: 2,
     shadowColor: 'black',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
