@@ -71,13 +71,6 @@ const getPressureColor = (pressure) => {
 
 const API_KEY = 'c04aaf45ed5b032e280a635805e2ad4e';
 
-const INITIAL_REGION = {
-  latitude: 55.7558,
-  longitude: 37.6173,
-  latitudeDelta: 0.5,
-  longitudeDelta: 0.5,
-};
-
 const getAllMarkersRegion = () => {
   const lats = CITIES.map((c) => c.lat);
   const lons = CITIES.map((c) => c.lon);
@@ -106,7 +99,14 @@ export default function App() {
   const [showPressure, setShowPressure] = useState(false);
 
   const goToCenter = () => {
-    mapRef.current?.animateToRegion(INITIAL_REGION, 500);
+    const moscow = CITIES.find(c => c.id === 1);
+    if (!moscow) return;
+    mapRef.current?.animateToRegion({
+      latitude: moscow.lat,
+      longitude: moscow.lon,
+      latitudeDelta: 0.5,
+      longitudeDelta: 0.5,
+    }, 500);
   };
 
   const showAllMarkers = () => {
@@ -140,7 +140,7 @@ export default function App() {
               description: data.weather[0].description,
               rain: data.rain?.['1h'] || 0,
               snow: data.snow?.['1h'] || 0,
-              windSpeed: Math.round(data.wind.speed * 3.6),
+              windSpeed: data.wind.speed,
               windDeg: data.wind.deg,
               clouds: data.clouds?.all || 0,
               pressure: data.main.pressure,
@@ -169,15 +169,6 @@ export default function App() {
       <SafeAreaView style={styles.center}>
         <ActivityIndicator size="large" color="#1976D2" />
         <Text style={styles.loadingText}>Загружаем погоду...</Text>
-      </SafeAreaView>
-    );
-  }
-
-  if (error) {
-    return (
-      <SafeAreaView style={styles.center}>
-        <Text style={styles.errorText}>❌ Ошибка: {error}</Text>
-        <Text style={styles.hint}>Проверь интернет и перезапусти</Text>
       </SafeAreaView>
     );
   }
@@ -292,7 +283,12 @@ export default function App() {
       <MapView
         ref={mapRef}
         style={styles.map}
-        initialRegion={INITIAL_REGION}>
+        initialRegion={{
+          latitude: CITIES.find(c => c.id === 1)?.lat ?? 55.7558,
+          longitude: CITIES.find(c => c.id === 1)?.lon ?? 37.6173,
+          latitudeDelta: 0.5,
+          longitudeDelta: 0.5,
+        }}>
         {showTemperature &&
           CITIES.map((city) => {
             const data = weatherData[city.id];
@@ -377,7 +373,7 @@ export default function App() {
                     />
                   </View>
                   <Text style={styles.windText}>
-                    {data.windSpeed} км/ч
+                    {data.windSpeed.toFixed(1)} м/с
                   </Text>
                 </View>
               </Marker>
@@ -473,34 +469,17 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  map: {
-    flex: 1,
-  },
+  container: { flex: 1 },
+  map: { flex: 1 },
   center: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'white',
   },
-  loadingText: {
-    marginTop: 12,
-    fontSize: 16,
-    color: 'gray',
-  },
-  errorText: {
-    fontSize: 16,
-    color: 'red',
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  hint: {
-    marginTop: 8,
-    fontSize: 13,
-    color: 'gray',
-  },
+  loadingText: { marginTop: 12, fontSize: 16, color: 'gray' },
+  errorText: { fontSize: 16, color: 'red', fontWeight: 'bold', textAlign: 'center' },
+  hint: { marginTop: 8, fontSize: 13, color: 'gray' },
   leftButtons: {
     position: 'absolute',
     top: 10,
@@ -517,17 +496,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     borderRadius: 20,
     elevation: 5,
-    shadowColor: 'black',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
   },
-  centerButtonText: {
-    marginLeft: 6,
-    fontSize: 14,
-    color: 'black',
-    fontWeight: '600',
-  },
+  centerButtonText: { marginLeft: 6, fontSize: 14, color: 'black', fontWeight: '600' },
   togglesContainer: {
     position: 'absolute',
     top: 10,
@@ -544,90 +514,41 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     borderRadius: 20,
     elevation: 5,
-    shadowColor: 'black',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
   },
-  layerToggleActive: {
-    backgroundColor: '#1E88E5',
-  },
-  layerToggleText: {
-    marginLeft: 8,
-    fontSize: 14,
-    color: 'gray',
-    fontWeight: '600',
-  },
-  layerToggleTextActive: {
-    color: 'white',
-  },
+  layerToggleActive: { backgroundColor: '#1E88E5' },
+  layerToggleText: { marginLeft: 8, fontSize: 14, color: 'gray', fontWeight: '600' },
+  layerToggleTextActive: { color: 'white' },
   weatherBox: {
     alignItems: 'center',
     backgroundColor: 'white',
     borderRadius: 10,
     padding: 2,
-    shadowColor: 'black',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
     elevation: 4,
   },
-  notFoundText: {
-    fontSize: 11,
-    color: 'red',
-    textAlign: 'center',
-    fontWeight: '600',
-  },
+  notFoundText: { fontSize: 11, color: 'red', textAlign: 'center', fontWeight: '600' },
   precipMarkerContainer: {
     alignItems: 'center',
     backgroundColor: 'rgba(255,255,255,0.95)',
     borderRadius: 10,
     padding: 4,
-    shadowColor: 'black',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
     elevation: 3,
   },
-  precipText: {
-    fontSize: 9,
-    color: 'black',
-    marginTop: 2,
-    fontWeight: '700',
-  },
+  precipText: { fontSize: 9, color: 'black', marginTop: 2, fontWeight: '700' },
   windMarkerContainer: {
     alignItems: 'center',
     backgroundColor: 'rgba(255,255,255,0.95)',
     borderRadius: 10,
     padding: 4,
-    shadowColor: 'black',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
     elevation: 3,
   },
-  windArrow: {
-    marginBottom: 2,
-  },
-  windText: {
-    fontSize: 9,
-    color: 'black',
-    fontWeight: '700',
-  },
+  windArrow: { marginBottom: 2 },
+  windText: { fontSize: 9, color: 'black', fontWeight: '700' },
   pressureMarkerContainer: {
     alignItems: 'center',
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderRadius: 8,
     padding: 4,
-    shadowColor: 'black',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
     elevation: 3,
   },
-  pressureText: {
-    fontSize: 12,
-    color: 'black',
-    fontWeight: '700',
-  },
+  pressureText: { fontSize: 12, color: 'black', fontWeight: '700' },
 });

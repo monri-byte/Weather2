@@ -21,12 +21,18 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-    "config": {
+      "config": {
         "googleMapsApiKey": "4c455ade3962863e890c1a5bafbff65f"
-      }
+      },
+      "package": "com.monribyte.Weather2"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "0539bf45-d22c-429b-9d6f-e2aeaf8adb69"
+      }
     }
   }
 }
