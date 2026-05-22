@@ -61,31 +61,37 @@ export default function App() {
         const results = {};
         
         for (const city of CITIES) {
-          const response = await fetch(
-            `https://api.openweathermap.org/data/2.5/weather?lat=${city.lat}&lon=${city.lon}&appid=${API_KEY}&units=metric&lang=ru`
-          );
-          
-          if (!response.ok) throw new Error(`Ошибка загрузки для ${city.name}`);
-          
-          const data = await response.json();
-          const weatherCode = data.weather[0].icon;
-          const weatherKey = OWM_TO_WEATHER[weatherCode] || 'cloudy';
-          
-          results[city.id] = {
-            temp: Math.round(data.main.temp),
-            weather: weatherKey,
-            description: data.weather[0].description,
-            rain: data.rain?.['1h'] || 0,
-            snow: data.snow?.['1h'] || 0,
-            windSpeed: Math.round(data.wind.speed * 3.6),
-            windDeg: data.wind.deg,
-          };
+          try {
+            const response = await fetch(
+              `https://api.openweathermap.org/data/2.5/weather?lat=${city.lat}&lon=${city.lon}&appid=${API_KEY}&units=metric&lang=ru`
+            );
+            
+            if (!response.ok) {
+              results[city.id] = { notFound: true };
+              continue;
+            }
+            
+            const data = await response.json();
+            const weatherCode = data.weather[0].icon;
+            const weatherKey = OWM_TO_WEATHER[weatherCode] || 'cloudy';
+            
+            results[city.id] = {
+              temp: Math.round(data.main.temp),
+              weather: weatherKey,
+              description: data.weather[0].description,
+              rain: data.rain?.['1h'] || 0,
+              snow: data.snow?.['1h'] || 0,
+              windSpeed: Math.round(data.wind.speed * 3.6),
+              windDeg: data.wind.deg,
+            };
+          } catch {
+            results[city.id] = { notFound: true };
+          }
         }
         
         setWeatherData(results);
       } catch (err) {
         setError(err.message);
-        console.error('Weather fetch error:', err);
       } finally {
         setLoading(false);
       }
@@ -110,7 +116,7 @@ export default function App() {
     return (
       <SafeAreaView style={styles.center}>
         <Text style={styles.errorText}>❌ Ошибка: {error}</Text>
-        <Text style={styles.hint}>Проверь API ключ и интернет</Text>
+        <Text style={styles.hint}>Проверь интернет и перезапусти</Text>
       </SafeAreaView>
     );
   }
@@ -152,7 +158,7 @@ export default function App() {
       >
         {showTemperature && CITIES.map(city => {
           const data = weatherData[city.id];
-          if (!data) return null;
+          if (!data || data.notFound) return null;
           const tempColor = getTempColor(data.temp);
           const fillColor = `${tempColor}73`;
           
@@ -170,7 +176,7 @@ export default function App() {
 
         {showPrecipitation && CITIES.map(city => {
           const data = weatherData[city.id];
-          if (!data) return null;
+          if (!data || data.notFound) return null;
           const precipMm = data.rain || data.snow || 0;
           if (precipMm < 0.1) return null;
           
@@ -204,7 +210,7 @@ export default function App() {
 
         {showWind && CITIES.map(city => {
           const data = weatherData[city.id];
-          if (!data) return null;
+          if (!data || data.notFound) return null;
           
           const windSpeed = data.windSpeed;
           const windDeg = data.windDeg || 0;
@@ -226,6 +232,20 @@ export default function App() {
 
         {CITIES.map(city => {
           const data = weatherData[city.id];
+          
+          if (data?.notFound) {
+            return (
+              <Marker
+                key={city.id}
+                coordinate={{ latitude: city.lat, longitude: city.lon }}
+              >
+                <View style={styles.weatherBox}>
+                  <Text style={styles.notFoundText}>город {city.name} не найден</Text>
+                </View>
+              </Marker>
+            );
+          }
+          
           if (!data) return null;
           const weatherCfg = WEATHER[data.weather];
           
@@ -279,6 +299,7 @@ const styles = StyleSheet.create({
   layerToggleText: { marginLeft: 8, fontSize: 14, color: 'gray', fontWeight: '600' },
   layerToggleTextActive: { color: 'white' },
   weatherBox: {
+    alignItems: 'center',
     backgroundColor: 'white',
     borderRadius: 16,
     padding: 6,
@@ -287,6 +308,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 4,
+  },
+  notFoundText: {
+    fontSize: 10,
+    color: 'red',
+    textAlign: 'center',
+    fontWeight: '500',
   },
   precipMarkerContainer: {
     alignItems: 'center',
