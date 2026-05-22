@@ -78,6 +78,23 @@ const INITIAL_REGION = {
   longitudeDelta: 0.5,
 };
 
+// ✅ Функция расчёта региона для всех маркеров
+const getAllMarkersRegion = () => {
+  const lats = CITIES.map((c) => c.lat);
+  const lons = CITIES.map((c) => c.lon);
+  const minLat = Math.min(...lats);
+  const maxLat = Math.max(...lats);
+  const minLon = Math.min(...lons);
+  const maxLon = Math.max(...lons);
+
+  return {
+    latitude: (minLat + maxLat) / 2,
+    longitude: (minLon + maxLon) / 2,
+    latitudeDelta: (maxLat - minLat) * 1.5, // +50% отступ
+    longitudeDelta: (maxLon - minLon) * 1.5,
+  };
+};
+
 export default function App() {
   const mapRef = useRef(null);
   const [weatherData, setWeatherData] = useState({});
@@ -91,6 +108,11 @@ export default function App() {
 
   const goToCenter = () => {
     mapRef.current?.animateToRegion(INITIAL_REGION, 500);
+  };
+
+  const showAllMarkers = () => {
+    const region = getAllMarkersRegion();
+    mapRef.current?.animateToRegion(region, 500);
   };
 
   useEffect(() => {
@@ -163,10 +185,17 @@ export default function App() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <TouchableOpacity style={styles.centerButton} onPress={goToCenter}>
-        <MaterialCommunityIcons name="target" size={20} color="black" />
-        <Text style={styles.centerButtonText}>В центр</Text>
-      </TouchableOpacity>
+      <View style={styles.leftButtons}>
+        <TouchableOpacity style={styles.centerButton} onPress={goToCenter}>
+          <MaterialCommunityIcons name="target" size={20} color="black" />
+          <Text style={styles.centerButtonText}>В центр</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.centerButton} onPress={showAllMarkers}>
+          <MaterialCommunityIcons name="map-marker-multiple" size={20} color="black" />
+          <Text style={styles.centerButtonText}>Все маркеры</Text>
+        </TouchableOpacity>
+      </View>
 
       <View style={styles.togglesContainer}>
         <TouchableOpacity
@@ -473,10 +502,15 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: 'gray',
   },
-  centerButton: {
+  leftButtons: {
     position: 'absolute',
     top: 10,
     left: 10,
+    alignItems: 'flex-start',
+    gap: 10,
+    zIndex: 1000,
+  },
+  centerButton: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'white',
@@ -488,7 +522,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
-    zIndex: 1000,
   },
   centerButtonText: {
     marginLeft: 6,
