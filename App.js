@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, SafeAreaView, Text, ActivityIndicator } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
+import { StyleSheet, View, SafeAreaView, Text, ActivityIndicator, TouchableOpacity } from 'react-native';
+import MapView, { Marker, Circle } from 'react-native-maps';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const CITIES = [
@@ -38,12 +38,21 @@ const getTempColor = (temp) => {
   return '#F44336';
 };
 
+const getPrecipRadius = (mm) => {
+  if (mm < 0.5) return 12000;
+  if (mm < 2) return 25000;
+  if (mm < 5) return 40000;
+  return 55000;
+};
+
 const API_KEY = 'c04aaf45ed5b032e280a635805e2ad4e';
 
 export default function App() {
   const [weatherData, setWeatherData] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showTemperature, setShowTemperature] = useState(true);
+  const [showPrecipitation, setShowPrecipitation] = useState(false);
 
   useEffect(() => {
     const fetchWeather = async () => {
@@ -65,6 +74,8 @@ export default function App() {
             temp: Math.round(data.main.temp),
             weather: weatherKey,
             description: data.weather[0].description,
+            rain: data.rain?.['1h'] || 0,
+            snow: data.snow?.['1h'] || 0,
           };
         }
         
@@ -103,6 +114,23 @@ export default function App() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <View style={styles.togglesContainer}>
+        <TouchableOpacity 
+          style={[styles.layerToggle, showTemperature && styles.layerToggleActive]}
+          onPress={() => setShowTemperature(!showTemperature)}
+        >
+          <MaterialCommunityIcons name={showTemperature ? 'thermometer' : 'thermometer-outline'} size={20} color={showTemperature ? '#fff' : '#666'} />
+          <Text style={[styles.layerToggleText, showTemperature && styles.layerToggleTextActive]}>Темп.</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.layerToggle, showPrecipitation && styles.layerToggleActive]}
+          onPress={() => setShowPrecipitation(!showPrecipitation)}
+        >
+          <MaterialCommunityIcons name={showPrecipitation ? 'umbrella' : 'umbrella-outline'} size={20} color={showPrecipitation ? '#fff' : '#666'} />
+          <Text style={[styles.layerToggleText, showPrecipitation && styles.layerToggleTextActive]}>Осадки</Text>
+        </TouchableOpacity>
+      </View>
+
       <MapView
         style={styles.map}
         initialRegion={{
@@ -112,12 +140,62 @@ export default function App() {
           longitudeDelta: 5,
         }}
       >
+        {showTemperature && CITIES.map(city => {
+          const data = weatherData[city.id];
+          if (!data) return null;
+          const tempColor = getTempColor(data.temp);
+          const fillColor = `${tempColor}73`;
+          
+          return (
+            <Circle
+              key={`temp-${city.id}`}
+              center={{ latitude: city.lat, longitude: city.lon }}
+              radius={30000}
+              fillColor={fillColor}
+              strokeColor="rgba(0,0,0,0.15)"
+              strokeWidth={1}
+            />
+          );
+        })}
+
+        {showPrecipitation && CITIES.map(city => {
+          const data = weatherData[city.id];
+          if (!data) return null;
+          const precipMm = data.rain || data.snow || 0;
+          if (precipMm < 0.1) return null;
+          
+          const isSnow = data.snow > 0;
+          const radius = getPrecipRadius(precipMm);
+          const fillColor = isSnow ? 'rgba(255, 255, 255, 0.6)' : 'rgba(30, 136, 229, 0.45)';
+          const strokeColor = isSnow ? 'rgba(200, 200, 200, 0.7)' : 'rgba(30, 136, 229, 0.8)';
+          
+          return (
+            <React.Fragment key={`precip-${city.id}`}>
+              <Circle
+                center={{ latitude: city.lat, longitude: city.lon }}
+                radius={radius}
+                fillColor={fillColor}
+                strokeColor={strokeColor}
+                strokeWidth={2}
+              />
+              <Marker coordinate={{ latitude: city.lat - 0.025, longitude: city.lon }}>
+                <View style={styles.precipMarkerContainer}>
+                  <MaterialCommunityIcons 
+                    name={isSnow ? 'weather-snowy' : 'weather-rainy'} 
+                    size={15} 
+                    color={isSnow ? '#42A5F5' : '#1E88E5'} 
+                  />
+                  <Text style={styles.precipText}>{precipMm.toFixed(1)} мм</Text>
+                </View>
+              </Marker>
+            </React.Fragment>
+          );
+        })}
+
         {CITIES.map(city => {
           const data = weatherData[city.id];
           if (!data) return null;
-          
           const weatherCfg = WEATHER[data.weather];
-          const tempColor = getTempColor(data.temp);
           
           return (
             <Marker
@@ -126,17 +204,8 @@ export default function App() {
               title={`${city.name}: ${data.temp}°C`}
               description={`Погода: ${weatherCfg.label}`}
             >
-              <View style={styles.markerContainer}>
-                <View style={[styles.tempBox, { backgroundColor: tempColor }]}>
-                  <Text style={styles.tempText}>{data.temp}°</Text>
-                </View>
-                <View style={styles.weatherBox}>
-                  <MaterialCommunityIcons 
-                    name={weatherCfg.icon} 
-                    size={28} 
-                    color={weatherCfg.color} 
-                  />
-                </View>
+              <View style={styles.weatherBox}>
+                <MaterialCommunityIcons name={weatherCfg.icon} size={32} color={weatherCfg.color} />
               </View>
             </Marker>
           );
@@ -150,32 +219,58 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   map: { flex: 1 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f5f5f5' },
-  loadingText: { marginTop: 12, fontSize: 16, color: 'black' },
-  errorText: { fontSize: 16, color: 'red', fontWeight: 'bold', textAlign: 'center' },
-  hint: { marginTop: 8, fontSize: 13, color: 'gray' },
-  markerContainer: {
+  loadingText: { marginTop: 12, fontSize: 16, color: '#666' },
+  errorText: { fontSize: 16, color: '#F44336', fontWeight: 'bold', textAlign: 'center' },
+  hint: { marginTop: 8, fontSize: 13, color: '#999' },
+  togglesContainer: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    alignItems: 'flex-end',
+    gap: 10,
+    zIndex: 1000,
+  },
+  layerToggle: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 20,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
   },
-  tempBox: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    marginBottom: 2,
-  },
-  tempText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
+  layerToggleActive: { backgroundColor: '#1E88E5' },
+  layerToggleText: { marginLeft: 8, fontSize: 14, color: '#666', fontWeight: '600' },
+  layerToggleTextActive: { color: '#fff' },
   weatherBox: {
-    backgroundColor: 'white',
-    borderRadius: 12,
-    padding: 4,
-    shadowColor: 'black',
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 6,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 4,
+  },
+  precipMarkerContainer: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderRadius: 10,
+    padding: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 3,
+  },
+  precipText: {
+    fontSize: 9,
+    color: '#333',
+    marginTop: 2,
+    fontWeight: '700',
   },
 });
