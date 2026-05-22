@@ -54,6 +54,7 @@ export default function App() {
   const [showTemperature, setShowTemperature] = useState(true);
   const [showPrecipitation, setShowPrecipitation] = useState(false);
   const [showWind, setShowWind] = useState(false);
+  const [showClouds, setShowClouds] = useState(false);
 
   useEffect(() => {
     const fetchWeather = async () => {
@@ -83,6 +84,7 @@ export default function App() {
               snow: data.snow?.['1h'] || 0,
               windSpeed: Math.round(data.wind.speed * 3.6),
               windDeg: data.wind.deg,
+              clouds: data.clouds?.all || 0,
             };
           } catch {
             results[city.id] = { notFound: true };
@@ -125,52 +127,64 @@ export default function App() {
     <SafeAreaView style={styles.container}>
       <View style={styles.togglesContainer}>
         <TouchableOpacity 
-          style={[styles.layerToggle, showTemperature && styles.layerToggleActive]}
+          style={[styles.layerToggle, showTemperature && styles.layerToggleActive]} 
           onPress={() => setShowTemperature(!showTemperature)}
         >
-          <MaterialCommunityIcons name={showTemperature ? 'thermometer' : 'thermometer-outline'} size={20} color={showTemperature ? '#fff' : '#666'} />
-          <Text style={[styles.layerToggleText, showTemperature && styles.layerToggleTextActive]}>Темп.</Text>
+          <MaterialCommunityIcons 
+            name={showTemperature ? 'thermometer' : 'thermometer-outline'} 
+            size={20} 
+            color={showTemperature ? 'white' : 'gray'} 
+          />
+          <Text style={[styles.layerToggleText, showTemperature && styles.layerToggleTextActive]}>
+            Темп.
+          </Text>
         </TouchableOpacity>
+
         <TouchableOpacity 
-          style={[styles.layerToggle, showPrecipitation && styles.layerToggleActive]}
+          style={[styles.layerToggle, showPrecipitation && styles.layerToggleActive]} 
           onPress={() => setShowPrecipitation(!showPrecipitation)}
         >
-          <MaterialCommunityIcons name={showPrecipitation ? 'umbrella' : 'umbrella-outline'} size={20} color={showPrecipitation ? '#fff' : '#666'} />
+          <MaterialCommunityIcons 
+            name={showPrecipitation ? 'umbrella' : 'umbrella-outline'} 
+            size={20} 
+            color={showPrecipitation ? 'white' : 'gray'} 
+          />
           <Text style={[styles.layerToggleText, showPrecipitation && styles.layerToggleTextActive]}>Осадки</Text>
         </TouchableOpacity>
         <TouchableOpacity 
-          style={[styles.layerToggle, showWind && styles.layerToggleActive]}
+          style={[styles.layerToggle, showWind && styles.layerToggleActive]} 
           onPress={() => setShowWind(!showWind)}
         >
-          <MaterialCommunityIcons name={showWind ? 'weather-windy' : 'weather-windy-variant'} size={20} color={showWind ? '#fff' : '#666'} />
-          <Text style={[styles.layerToggleText, showWind && styles.layerToggleTextActive]}>Ветер</Text>
+          <MaterialCommunityIcons 
+            name={showWind ? 'weather-windy' : 'weather-windy-variant'} 
+            size={20} 
+            color={showWind ? '#fff' : '#666'} 
+          />
+          <Text style={[styles.layerToggleText, showWind && styles.layerToggleTextActive]}>
+            Ветер
+          </Text>
         </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={[styles.layerToggle, showClouds && styles.layerToggleActive]} 
+          onPress={() => setShowClouds(!showClouds)}>
+          <MaterialCommunityIcons 
+            name={showClouds ? 'cloud' : 'cloud-outline'} 
+            size={20} 
+            color={showClouds ? '#fff' : '#666'} 
+          /><Text style={[styles.layerToggleText, showClouds && styles.layerToggleTextActive]}>
+            Облака
+          </Text>
+        </TouchableOpacity>
+
       </View>
 
-      <MapView
-        style={styles.map}
-        initialRegion={{
-          latitude: 55.7558,
-          longitude: 37.0,
-          latitudeDelta: 5,
-          longitudeDelta: 5,
-        }}
-      >
+      <MapView style={styles.map} initialRegion={{ latitude: 55.7558, longitude: 37.0, latitudeDelta: 5, longitudeDelta: 5 }}>
         {showTemperature && CITIES.map(city => {
           const data = weatherData[city.id];
           if (!data || data.notFound) return null;
-          const tempColor = getTempColor(data.temp);
-          const fillColor = `${tempColor}73`;
-          
           return (
-            <Circle
-              key={`temp-${city.id}`}
-              center={{ latitude: city.lat, longitude: city.lon }}
-              radius={30000}
-              fillColor={fillColor}
-              strokeColor="rgba(0,0,0,0.15)"
-              strokeWidth={1}
-            />
+            <Circle key={`temp-${city.id}`} center={{ latitude: city.lat, longitude: city.lon }} radius={30000} fillColor={`${getTempColor(data.temp)}73`} strokeColor="rgba(0,0,0,0.15)" strokeWidth={1} />
           );
         })}
 
@@ -179,28 +193,13 @@ export default function App() {
           if (!data || data.notFound) return null;
           const precipMm = data.rain || data.snow || 0;
           if (precipMm < 0.1) return null;
-          
           const isSnow = data.snow > 0;
-          const radius = getPrecipRadius(precipMm);
-          const fillColor = isSnow ? 'rgba(255, 255, 255, 0.6)' : 'rgba(30, 136, 229, 0.45)';
-          const strokeColor = isSnow ? 'rgba(215, 215, 215, 0.7)' : 'rgba(30, 136, 229, 0.8)';
-          
           return (
             <React.Fragment key={`precip-${city.id}`}>
-              <Circle
-                center={{ latitude: city.lat, longitude: city.lon }}
-                radius={radius}
-                fillColor={fillColor}
-                strokeColor={strokeColor}
-                strokeWidth={2}
-              />
+              <Circle center={{ latitude: city.lat, longitude: city.lon }} radius={getPrecipRadius(precipMm)} fillColor={isSnow ? 'rgba(255,255,255,0.6)' : 'rgba(30,136,229,0.45)'} strokeColor={isSnow ? 'rgba(215,215,215,0.7)' : 'rgba(30,136,229,0.8)'} strokeWidth={2} />
               <Marker coordinate={{ latitude: city.lat - 0.025, longitude: city.lon }}>
                 <View style={styles.precipMarkerContainer}>
-                  <MaterialCommunityIcons 
-                    name={isSnow ? 'weather-snowy' : 'weather-rainy'} 
-                    size={15} 
-                    color={isSnow ? '#43a6f7' : '#1E88E5'} 
-                  />
+                  <MaterialCommunityIcons name={isSnow ? 'weather-snowy' : 'weather-rainy'} size={15} color={isSnow ? '#43a6f7' : '#1E88E5'} />
                   <Text style={styles.precipText}>{precipMm.toFixed(1)} мм</Text>
                 </View>
               </Marker>
@@ -211,22 +210,34 @@ export default function App() {
         {showWind && CITIES.map(city => {
           const data = weatherData[city.id];
           if (!data || data.notFound) return null;
-          
-          const windSpeed = data.windSpeed;
-          const windDeg = data.windDeg || 0;
-          
           return (
-            <Marker
-              key={`wind-${city.id}`}
-              coordinate={{ latitude: city.lat + 0.025, longitude: city.lon }}
-            >
+            <Marker key={`wind-${city.id}`} coordinate={{ latitude: city.lat + 0.025, longitude: city.lon }}>
               <View style={styles.windMarkerContainer}>
-                <View style={[styles.windArrow, { transform: [{ rotate: `${windDeg}deg` }] }]}>
+                <View style={[styles.windArrow, { transform: [{ rotate: `${data.windDeg || 0}deg` }] }]}>
                   <MaterialCommunityIcons name="arrow-up" size={14} color="#795548" />
                 </View>
-                <Text style={styles.windText}>{windSpeed} км/ч</Text>
+                <Text style={styles.windText}>{data.windSpeed} км/ч</Text>
               </View>
             </Marker>
+          );
+        })}
+
+        {showClouds && CITIES.map(city => {
+          const data = weatherData[city.id];
+          if (!data || data.notFound) return null;
+          const clouds = data.clouds;
+          if (clouds < 10) return null;
+          const opacity = Math.max(0.15, Math.min(0.7, clouds / 100));
+          
+          return (
+            <Circle
+              key={`clouds-${city.id}`}
+              center={{ latitude: city.lat, longitude: city.lon }}
+              radius={35000}
+              fillColor={`rgba(200, 200, 200, ${opacity})`}
+              strokeColor="rgba(180, 180, 180, 0.3)"
+              strokeWidth={1}
+            />
           );
         })}
 
@@ -235,10 +246,7 @@ export default function App() {
           
           if (data?.notFound) {
             return (
-              <Marker
-                key={city.id}
-                coordinate={{ latitude: city.lat, longitude: city.lon }}
-              >
+              <Marker key={city.id} coordinate={{ latitude: city.lat, longitude: city.lon }}>
                 <View style={styles.weatherBox}>
                   <Text style={styles.notFoundText}>город {city.name} не найден</Text>
                 </View>
@@ -247,17 +255,10 @@ export default function App() {
           }
           
           if (!data) return null;
-          const weatherCfg = WEATHER[data.weather];
-          
           return (
-            <Marker
-              key={city.id}
-              coordinate={{ latitude: city.lat, longitude: city.lon }}
-              title={`${city.name}: ${data.temp}°C`}
-              description={`Погода: ${weatherCfg.label}`}
-            >
+            <Marker key={city.id} coordinate={{ latitude: city.lat, longitude: city.lon }} title={`${city.name}: ${data.temp}°C`} description={`Погода: ${WEATHER[data.weather].label}`}>
               <View style={styles.weatherBox}>
-                <MaterialCommunityIcons name={weatherCfg.icon} size={32} color={weatherCfg.color} />
+                <MaterialCommunityIcons name={WEATHER[data.weather].icon} size={32} color={WEATHER[data.weather].color} />
               </View>
             </Marker>
           );
@@ -268,87 +269,118 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  map: { flex: 1 },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f5f5f5' },
-  loadingText: { marginTop: 12, fontSize: 16, color: 'gray' },
-  errorText: { fontSize: 16, color: 'red', fontWeight: 'bold', textAlign: 'center' },
-  hint: { marginTop: 8, fontSize: 13, color: 'gray' },
-  togglesContainer: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    alignItems: 'flex-end',
-    gap: 10,
-    zIndex: 1000,
+  container: { 
+    flex: 1 
   },
-  layerToggle: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'white',
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderRadius: 20,
-    elevation: 5,
-    shadowColor: 'black',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
+  map: { 
+    flex: 1 
   },
-  layerToggleActive: { backgroundColor: '#1E88E5' },
-  layerToggleText: { marginLeft: 8, fontSize: 14, color: 'gray', fontWeight: '600' },
-  layerToggleTextActive: { color: 'white' },
-  weatherBox: {
-    alignItems: 'center',
-    backgroundColor: 'white',
-    borderRadius: 16,
-    padding: 6,
-    shadowColor: 'black',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 4,
+  center: { 
+    flex: 1, 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    backgroundColor: '#f5f5f5' 
   },
-  notFoundText: {
-    fontSize: 10,
-    color: 'red',
-    textAlign: 'center',
-    fontWeight: '500',
+  loadingText: { 
+    marginTop: 12, 
+    fontSize: 16, 
+    color: 'gray' 
   },
-  precipMarkerContainer: {
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    borderRadius: 10,
-    padding: 4,
-    shadowColor: 'black',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-    elevation: 3,
+  errorText: { 
+    fontSize: 16, 
+    color: 'red', 
+    fontWeight: 'bold', 
+    textAlign: 'center' 
   },
-  precipText: {
-    fontSize: 9,
-    color: 'black',
-    marginTop: 2,
-    fontWeight: '700',
+  hint: { 
+    marginTop: 8, 
+    fontSize: 13, 
+    color: 'gray' 
   },
-  windMarkerContainer: {
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    borderRadius: 10,
-    padding: 4,
-    shadowColor: 'black',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-    elevation: 3,
+  togglesContainer: { 
+    position: 'absolute', 
+    top: 10, 
+    right: 10, 
+    alignItems: 'flex-end', 
+    gap: 10, 
+    zIndex: 1000 
   },
-  windArrow: {
-    marginBottom: 2,
+  layerToggle: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    backgroundColor: 'white', 
+    paddingVertical: 10, 
+    paddingHorizontal: 14, 
+    borderRadius: 20, 
+    elevation: 5, 
+    shadowColor: 'black', 
+    shadowOffset: { width: 0, height: 2 }, 
+    shadowOpacity: 0.2, 
+    shadowRadius: 4 
   },
-  windText: {
-    fontSize: 9,
-    color: 'black',
-    fontWeight: '700',
+  layerToggleActive: { 
+    backgroundColor: '#1E88E5' 
+  },
+  layerToggleText: { 
+    marginLeft: 8, 
+    fontSize: 14, 
+    color: 'gray', 
+    fontWeight: '600' 
+  },
+  layerToggleTextActive: { 
+    color: 'white' 
+  },
+  weatherBox: { 
+    alignItems: 'center', 
+    backgroundColor: 'white', 
+    borderRadius: 16, 
+    padding: 8, 
+    shadowColor: 'black', 
+    shadowOffset: { width: 0, height: 2 }, 
+    shadowOpacity: 0.25, 
+    shadowRadius: 3.84, 
+    elevation: 4 
+  },
+  notFoundText: { 
+    fontSize: 11, 
+    color: 'red', 
+    textAlign: 'center', 
+    fontWeight: '600' 
+  },
+  precipMarkerContainer: { 
+    alignItems: 'center', 
+    backgroundColor: 'rgba(255,255,255,0.95)', 
+    borderRadius: 10, 
+    padding: 4, 
+    shadowColor: 'black', 
+    shadowOffset: { width: 0, height: 1 }, 
+    shadowOpacity: 0.2, 
+    shadowRadius: 2, 
+    elevation: 3 
+  },
+  precipText: { 
+    fontSize: 9, 
+    color: 'black', 
+    marginTop: 2, 
+    fontWeight: '700' 
+  },
+  windMarkerContainer: { 
+    alignItems: 'center', 
+    backgroundColor: 'rgba(255,255,255,0.95)', 
+    borderRadius: 10, 
+    padding: 4, 
+    shadowColor: 'black', 
+    shadowOffset: { width: 0, height: 1 }, 
+    shadowOpacity: 0.2, 
+    shadowRadius: 2, 
+    elevation: 3 
+  },
+  windArrow: { 
+    marginBottom: 2 
+  },
+  windText: { 
+    fontSize: 9, 
+    color: 'black', 
+    fontWeight: '700' 
   },
 });
