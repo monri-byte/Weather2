@@ -167,7 +167,7 @@ export default function App() {
           const isSnow = data.snow > 0;
           const radius = getPrecipRadius(precipMm);
           const fillColor = isSnow ? 'rgba(255, 255, 255, 0.6)' : 'rgba(30, 136, 229, 0.45)';
-          const strokeColor = isSnow ? 'rgba(200, 200, 200, 0.7)' : 'rgba(30, 136, 229, 0.8)';
+          const strokeColor = isSnow ? 'rgba(215, 215, 215, 0.7)' : 'rgba(30, 136, 229, 0.8)';
           
           return (
             <React.Fragment key={`precip-${city.id}`}>
@@ -183,7 +183,7 @@ export default function App() {
                   <MaterialCommunityIcons 
                     name={isSnow ? 'weather-snowy' : 'weather-rainy'} 
                     size={15} 
-                    color={isSnow ? '#42A5F5' : '#1E88E5'} 
+                    color={isSnow ? '#43a6f7' : '#1E88E5'} 
                   />
                   <Text style={styles.precipText}>{precipMm.toFixed(1)} мм</Text>
                 </View>
@@ -219,9 +219,9 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   map: { flex: 1 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f5f5f5' },
-  loadingText: { marginTop: 12, fontSize: 16, color: '#666' },
-  errorText: { fontSize: 16, color: '#F44336', fontWeight: 'bold', textAlign: 'center' },
-  hint: { marginTop: 8, fontSize: 13, color: '#999' },
+  loadingText: { marginTop: 12, fontSize: 16, color: 'gray' },
+  errorText: { fontSize: 16, color: 'red', fontWeight: 'bold', textAlign: 'center' },
+  hint: { marginTop: 8, fontSize: 13, color: 'gray' },
   togglesContainer: {
     position: 'absolute',
     top: 10,
@@ -233,24 +233,24 @@ const styles = StyleSheet.create({
   layerToggle: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    backgroundColor: 'white',
     paddingVertical: 10,
     paddingHorizontal: 14,
     borderRadius: 20,
     elevation: 5,
-    shadowColor: '#000',
+    shadowColor: 'black',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
   },
   layerToggleActive: { backgroundColor: '#1E88E5' },
-  layerToggleText: { marginLeft: 8, fontSize: 14, color: '#666', fontWeight: '600' },
-  layerToggleTextActive: { color: '#fff' },
+  layerToggleText: { marginLeft: 8, fontSize: 14, color: 'gray', fontWeight: '600' },
+  layerToggleTextActive: { color: 'white' },
   weatherBox: {
-    backgroundColor: '#fff',
+    backgroundColor: 'white',
     borderRadius: 16,
     padding: 6,
-    shadowColor: '#000',
+    shadowColor: 'black',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
@@ -261,7 +261,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderRadius: 10,
     padding: 4,
-    shadowColor: '#000',
+    shadowColor: 'black',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.2,
     shadowRadius: 2,
@@ -269,7 +269,7 @@ const styles = StyleSheet.create({
   },
   precipText: {
     fontSize: 9,
-    color: '#333',
+    color: 'black',
     marginTop: 2,
     fontWeight: '700',
   },
